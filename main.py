@@ -18,8 +18,6 @@ from pyspark.ml.linalg import Vector
 from pyspark.ml.classification import NaiveBayes, LogisticRegression, LinearSVC
 from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator 
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import accuracy_score
 
 sc = SparkContext(appName="BigDataProj")
 ssc = StreamingContext(sc, 1)
