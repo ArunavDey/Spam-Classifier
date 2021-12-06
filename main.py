@@ -6,6 +6,7 @@
 import time
 import json
 import pandas
+import numpy as np
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark.sql import SparkSession
@@ -17,6 +18,8 @@ from pyspark.ml.linalg import Vector
 from pyspark.ml.classification import NaiveBayes, LogisticRegression, LinearSVC
 from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator 
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
 
 sc = SparkContext(appName="BigDataProj")
 ssc = StreamingContext(sc, 1)
@@ -42,17 +45,46 @@ def modelHelper(df):
     cleanData = cleaner.transform(df)
     cleanData = cleanData.select(['label','features'])
     training,testing = cleanData.randomSplit([0.7,0.3])
+    # training.select(['features']).show()
+    # training.select(['label']).show()
+    # print(type(training))
+    print("----------------------") 
     NBModel(training, testing)
     LRModel(training, testing)
     SVMModel(training, testing)
+    print("----------------------") 
+    # skNB(training.select(['features']), training.select(['label']), testing.select(['features']))
+
+def skNB(training, target, testing):
+    nb = GaussianNB()
+
+    train = np.array(training.collect())
+    test = np.array(testing.collect())
+    tar = np.array(target.collect())
+
+    nsamples, nx, ny = train.shape
+    train_dataset = train.reshape((nsamples,nx*ny))
+
+
+    msamples, mx, my = tar.shape
+    target_dataset = tar.reshape((msamples,mx*my))
+
+    osamples, ox, oy = test.shape
+    test_dataset = test.reshape((osamples,ox*oy))
+
+    nb.partial_fit(train_dataset, target_dataset, ['0.0', '1.0'])
+    spamPred = np.array(nb.predict(test_dataset))
+    acc = accuracy_score(test_dataset, spamPred)
+    print(acc)
+
 
 def NBModel(training, testing):
-    nb = NaiveBayes()
+    nb = NaiveBayes(smoothing=1.0, modelType="gaussian")
     spamPred = nb.fit(training)
     testResults = spamPred.transform(testing)
     acc_eval = MulticlassClassificationEvaluator()
     acc = acc_eval.evaluate(testResults)
-    testResults.show(n=10, truncate=True)
+    # testResults.show(n=10, truncate=True)
     print("Accuracy of Naive Bayes: {}%".format(acc*100))
 
 def LRModel(training, testing):
@@ -61,7 +93,7 @@ def LRModel(training, testing):
     testResults = spamPred.transform(testing)
     acc_eval = MulticlassClassificationEvaluator()
     acc = acc_eval.evaluate(testResults)
-    testResults.show(n=10, truncate=True)
+    # testResults.show(n=10, truncate=True)
     print("Accuracy of Logistic Regression: {}%".format(acc*100))
 
 def SVMModel(training, testing):
@@ -70,7 +102,7 @@ def SVMModel(training, testing):
     testResults = spamPred.transform(testing)
     acc_eval = MulticlassClassificationEvaluator()
     acc = acc_eval.evaluate(testResults)
-    testResults.show(n=10, truncate=True)
+    # testResults.show(n=10, truncate=True)
     print("Accuracy of Support Vector Machine: {}%".format(acc*100))
 
 def RDDtoDF(rdd):
