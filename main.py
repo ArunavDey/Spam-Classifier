@@ -53,30 +53,6 @@ def modelHelper(df):
     LRModel(training, testing)
     SVMModel(training, testing)
     print("----------------------") 
-    # skNB(training.select(['features']), training.select(['label']), testing.select(['features']))
-
-def skNB(training, target, testing):
-    nb = GaussianNB()
-
-    train = np.array(training.collect())
-    test = np.array(testing.collect())
-    tar = np.array(target.collect())
-
-    nsamples, nx, ny = train.shape
-    train_dataset = train.reshape((nsamples,nx*ny))
-
-
-    msamples, mx, my = tar.shape
-    target_dataset = tar.reshape((msamples,mx*my))
-
-    osamples, ox, oy = test.shape
-    test_dataset = test.reshape((osamples,ox*oy))
-
-    nb.partial_fit(train_dataset, target_dataset, ['0.0', '1.0'])
-    spamPred = np.array(nb.predict(test_dataset))
-    acc = accuracy_score(test_dataset, spamPred)
-    print(acc)
-
 
 def NBModel(training, testing):
     nb = NaiveBayes(smoothing=1.0, modelType="gaussian")
