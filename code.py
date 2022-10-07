@@ -1,7 +1,6 @@
 # Big Data Final Project
 # SSML - Spark Streaming for Machine Learning
 # Spam Classifier
-# BD2_066_167_232_339
 
 import time
 import json
